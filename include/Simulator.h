@@ -31,9 +31,9 @@ private:
 	void errorCheckingWhileConnecting(ifstream &inputFile, const int &upId, const int &downId, const int &pin);
 	void errorCheckingBeforConnecting(ifstream &inputFile);
 
-	// svi elementi racunajuci i sonde
+	// all elements including probes
 	vector<Element *> allElements_;
-	// sve sonde
+	// all probes
 	vector<Probe *> probes_;
 	Generator *GenForReference_;
 

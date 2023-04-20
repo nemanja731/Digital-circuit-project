@@ -25,20 +25,23 @@ public:
 	Element(const Element &) = delete;
 	virtual ~Element() { input_.clear(); };
 
-	/* Funkcija za generatore sluzi da im pomeri remainingTime_ za currentInterval i vrati novo stanje,
-	gate-ovima uzme trenutno stanje, a za sonde da pocne od njih prolazak kroz stablo elementa i vrati stanje*/
+	// The function for the generators is to move the remainingTime_ to the currentInterval
+	// and return the new state, for the gates, take the current state, and for the probes,
+	// start from them passing through the element tree and return the state
 	virtual bool getState() = 0;
 
-	// Funckija sluzi da se pozove getState svih inputa i promeni trenutno stanje tog elemnta u zavisnosti od funkcije elementa i njegovig inputa
+	// The function serves to call getState of all inputs and change the current state
+	// of that element depending on the function of the element and its input
 	virtual void logic();
 
-	// Provera da li element na input_[checkedInputs_] je neki generator
+	// Checking if the element at input_[checkedInputs_] is some generator
 	bool isInputGenerator() const;
 
-	/*Koristi se u getState() sonde. Element na inputs_[checkedInputs_] inkrementira checkedOutput_
-	i ako je jednak outputs_(broj outputa) resetuje ga na 0 za naredni ciklus simulacije,ako je generator vraca
-	true ako nije generator onda je gate i vraca true ako je vec obisao za taj ciklus jer onda
-	moze da mu uzme stanje i ne treba da ide dalje*/
+	// Used in getState() probes. The element at inputs_[checkedInputs_] increments
+	// checkedOutput_ and if it is equal to outputs_(number of outputs) it resets it
+	// to 0 for the next simulation cycle, if the generator returns true if it is not
+	// a generator then it is gate and returns true if it has already run for that
+	// cycle because then can take his condition and should not go further
 	bool checkForGenOrAlreadyEvalutedGate();
 
 	bool state_;
@@ -55,8 +58,9 @@ public:
 	Probe(const int id) : Element(PROBE, 1, id){};
 	Probe(const Probe &) = delete;
 
+	// writes changes to ouputString_
+	void writeState(bool newState);
 	virtual bool getState() override;
-	void writeState(bool newState); // zapisuje promene u ouputString_
 
 	string outputString_;
 };
@@ -66,7 +70,8 @@ public:
 	Generator(const Type elType, const double remainigTime, const int id) : Element(elType, 0, id), remainingTime_(remainigTime){};
 	Generator(const Generator &) = delete;
 
-	double remainingTime_; // vreme preostalo do naredne promene
+	// time remaining until the next change
+	double remainingTime_;
 };
 class Gate : public Element
 {
@@ -82,7 +87,7 @@ public:
 
 	virtual bool getState() override;
 
-	// Vreme poluperiode odnosno vreme potrebno za promenu signala
+	// half-period time, ie the time required for a signal change
 	const double halfPeriod_;
 };
 class UserGenerator : public Generator
@@ -96,7 +101,7 @@ public:
 
 	int changeIndex_;
 
-	// vektor trenutaka kada dolazi do promene signala
+	// vector of moments when the signal changes
 	vector<double> changes_;
 };
 class And : public Gate
