@@ -1,6 +1,7 @@
 # Digital-circuit-simulator
 
-The goal of the project is the simulation of a digital circuit.
+The goal of the project is the simulation of a digital circuit.<br />
+The project is divided into two directories: include and source. The include directory contains all the header files where the interface class is located, while the source directory contains the implementation files
 
 ## Elements
 
