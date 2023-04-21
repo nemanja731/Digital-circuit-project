@@ -15,7 +15,7 @@ Generators can be: Clock signal generator (**Simple Generator**), Manually gener
 
 ## How the Simulator works
 
-The generators generate a signal that can be 0 or 1, that signal is propagated through the circuit via gates and at the output the probe records the output and the moment of the output change.
+The Generators generate a signal that can be 0 or 1, that signal is propagated through the circuit via Gates and at the output the Probe records the moment of the output change and the value of output.
 
 In the Main.cpp, an object of the simulator class is created and its two main functions are called:
 
