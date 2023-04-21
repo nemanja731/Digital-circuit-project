@@ -1,1 +1,1 @@
-# Digital-circuit-project
+# Digital-circuit-simulator
