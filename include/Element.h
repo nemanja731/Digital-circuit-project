@@ -52,6 +52,14 @@ public:
 	vector<Element *> input_;
 };
 
+// abstract class
+class Gate : public Element
+{
+public:
+	Gate(const Type elType, const int pin, const int id) : Element(elType, pin, id){};
+	Gate(const Gate &) = delete;
+};
+
 class Probe : public Element
 {
 public:
@@ -64,6 +72,8 @@ public:
 
 	string outputString_;
 };
+
+// abstract class
 class Generator : public Element
 {
 public:
@@ -73,12 +83,7 @@ public:
 	// time remaining until the next change
 	double remainingTime_;
 };
-class Gate : public Element
-{
-public:
-	Gate(const Type elType, const int pin, const int id) : Element(elType, pin, id){};
-	Gate(const Gate &) = delete;
-};
+
 class SimpleGenerator : public Generator
 {
 public:
@@ -87,7 +92,7 @@ public:
 
 	virtual bool getState() override;
 
-	// half-period time, ie the time required for a signal change
+	// half-period time, is the time required for a signal change
 	const double halfPeriod_;
 };
 class UserGenerator : public Generator
