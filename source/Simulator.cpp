@@ -4,24 +4,28 @@
 double Simulator::time_ = 0;
 int Simulator::numberOfElemets_ = 0;
 
+Simulator::~Simulator()
+{
+	emptySimulator();
+}
+
+void Simulator::emptySimulator()
+{
+	for (Element *t : allElements_)
+	{
+		delete t;
+	}
+	probes_.clear();
+	allElements_.clear();
+	GenForReference_ = nullptr;
+	Element::currentInterval_ = Element::nextInterval_ = Element::currentTime_ = 0;
+}
+
 void Simulator::loadCircuit(const string &filepath)
 {
 	try
 	{
-		double newTime, nomOfEl;
-		// if something has not been deleted to clean the simulator
-		if (!probes_.empty() || !allElements_.empty())
-			emptySimulator();
-		ifstream inputFile(filepath, ios::in);
-		// read the first two lines and check
-		getAndCheck(inputFile, newTime);
-		getAndCheck(inputFile, nomOfEl);
-		Simulator::time_ = newTime;
-		Simulator::numberOfElemets_ = nomOfEl;
-		// make space in memory for each element and add all elements to vector allElements_
-		createElements(inputFile);
-		// connects all elements to each other and remembers how many outputs each element has
-		connectElements(inputFile);
+		read(filepath);
 	}
 	catch (InvalidValue *e)
 	{
@@ -33,6 +37,24 @@ void Simulator::loadCircuit(const string &filepath)
 	}
 }
 
+void Simulator::read(const string &filepath)
+{
+	double newTime, nomOfEl;
+	// if something has not been deleted to clean the simulator
+	if (!probes_.empty() || !allElements_.empty())
+		emptySimulator();
+	ifstream inputFile(filepath, ios::in);
+	// read the first two lines and check
+	getAndCheck(inputFile, newTime);
+	getAndCheck(inputFile, nomOfEl);
+	Simulator::time_ = newTime;
+	Simulator::numberOfElemets_ = nomOfEl;
+	// make space in memory for each element and add all elements to vector allElements_
+	createElements(inputFile);
+	// connects all elements to each other and remembers how many outputs each element has
+	connectElements(inputFile);
+}
+
 void Simulator::simulate(const string &filepath)
 {
 	// writes the change to each probe for the entire simulation
@@ -42,35 +64,11 @@ void Simulator::simulate(const string &filepath)
 	emptySimulator();
 }
 
-Simulator::~Simulator()
-{
-	emptySimulator();
-}
-
 void Simulator::connectElements(ifstream &inputFile)
 {
-	string line;
-	stringstream lineStream(line);
-	int upId, downId, pin;
 	try
 	{
-		while (inputFile.peek() != EOF)
-		{
-			// reads line by line
-			getline(inputFile, line);
-			lineStream.str(line);
-			lineStream >> downId >> upId >> pin;
-
-			errorCheckingWhileConnecting(inputFile, upId, downId, pin);
-			// the number of outputs is increased
-			allElements_[downId - 1]->outputs_++;
-			// interconnection of inputs
-			allElements_[upId - 1]->input_[pin] = allElements_[downId - 1];
-
-			lineStream.clear();
-		}
-		errorCheckingAfterConnecting(inputFile);
-		inputFile.close();
+		connect(inputFile);
 	}
 	catch (AlreadyConnected *e)
 	{
@@ -98,6 +96,30 @@ void Simulator::connectElements(ifstream &inputFile)
 	}
 }
 
+void connect(const string &inputFile)
+{
+	string line;
+	stringstream lineStream(line);
+	int upId, downId, pin;
+	while (inputFile.peek() != EOF)
+	{
+		// reads line by line
+		getline(inputFile, line);
+		lineStream.str(line);
+		lineStream >> downId >> upId >> pin;
+
+		errorCheckingWhileConnecting(inputFile, upId, downId, pin);
+		// the number of outputs is increased
+		allElements_[downId - 1]->outputs_++;
+		// interconnection of inputs
+		allElements_[upId - 1]->input_[pin] = allElements_[downId - 1];
+
+		lineStream.clear();
+	}
+	errorCheckingAfterConnecting(inputFile);
+	inputFile.close();
+}
+
 void Simulator::writeToProbeString()
 {
 	while (Element::currentTime_ < time_)
@@ -114,7 +136,7 @@ void Simulator::writeToProbeString()
 			t->writeState(t->getState());
 		}
 		Element::currentInterval_ = Element::nextInterval_;
-		Element::currentTime_ += Element::currentInterval_; // zamena intervala i resetovanje flaga da se ponovo uzme referentan vrednost preostalog vremna za narednu promenu
+		Element::currentTime_ += Element::currentInterval_;
 	}
 }
 
@@ -132,17 +154,6 @@ void Simulator::writeToTxtFile(const string &filepath)
 	Element::currentInterval_ = Element::nextInterval_ = Element::currentTime_ = 0;
 }
 
-void Simulator::emptySimulator()
-{
-	for (Element *t : allElements_)
-	{
-		delete t;
-	}
-	probes_.clear();
-	allElements_.clear();
-	GenForReference_ = nullptr;
-	Element::currentInterval_ = Element::nextInterval_ = Element::currentTime_ = 0;
-}
 void Simulator::createElements(ifstream &inputFile)
 {
 	allElements_.resize(numberOfElemets_, nullptr);
@@ -223,49 +234,6 @@ void Simulator::createOneElement(ifstream &inputFile)
 		lineStream.clear();
 		throw new SameDefinedElements("The same element is defined more than once");
 	}
-	switch (type)
-	{
-	case 0:
-		newP = new Probe(id);
-		newE = newP;
-		probes_.push_back(newP);
-		break;
-	case 1:
-		lineStream >> freq;
-		newG = new SimpleGenerator(freq, id);
-		if (GenForReference_ == nullptr)
-			GenForReference_ = newG;
-		newE = newG;
-		break;
-	case 2:
-		while (lineStream.peek() != EOF)
-		{
-			lineStream >> num;
-			sum = sum + num;
-			changes.push_back(num);
-		}
-		newGen = new UserGenerator(changes, id);
-		newGen->changes_.push_back(time_ - sum);
-		if (GenForReference_ == nullptr)
-			GenForReference_ = newGen;
-		newE = newGen;
-		changes.clear();
-		break;
-	case 3:
-		lineStream >> inputs;
-		newE = new Not(id);
-		break;
-	case 4:
-		lineStream >> inputs;
-		newE = new And(inputs, id);
-		break;
-	case 5:
-		lineStream >> inputs;
-		newE = new Or(inputs, id);
-		break;
-	}
-	lineStream.clear();
-	allElements_[id - 1] = newE;
 }
 
 void Simulator::errorCheckingAfterConnecting(ifstream &inputFile)
