@@ -6,9 +6,9 @@ The goal of the project is the simulation of a digital circuit. The project is d
 
 The elements that make up the circuit are:
 
-- Logic combination circuits (Gates)
-- Generators
-- Probes
+- Logic combination circuits (**Gates**)
+- **Generators**
+- **Probes**
 
 Gates can be: **And**, **Or** and **Not**.<br />
 Generators can be: Clock signal generator (**Simple Generator**), Manually generator (**User Generator**).
