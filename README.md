@@ -10,7 +10,7 @@ The elements that make up the circuit are:
 - Generators
 - Probes
 
-Logic combination circuits can be: **And**, **Or** and **Not**
+Logic combination circuits can be: **And**, **Or** and **Not**.
 Generators can be: Clock signal generator (**Simple Generator**), Manually generator (**User Generator**)
 
 ## How the Simulator works
